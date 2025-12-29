@@ -1,0 +1,46 @@
+package com.Focus.SpringSecurityEx.service;
+
+import com.Focus.SpringSecurityEx.model.Users;
+import com.Focus.SpringSecurityEx.repo.UserRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+
+@Service
+public class UserService {
+
+
+    @Autowired
+    JWTServices jwtServices;
+    @Autowired
+    AuthenticationManager authManager;
+
+    @Autowired
+    private UserRepo repo;
+
+
+    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+
+    public Users register(Users user) {
+        user.setPassword(encoder.encode(user.getPassword()));
+        repo.save(user);
+        return user;
+    }
+
+
+    public String verify(Users user) {
+        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword())); // passing unauthenticate & will get authenticate
+
+        // to check if the user is real
+        if(authentication.isAuthenticated()){
+            return jwtServices.generateToken(user.getUsername());
+        }
+
+        return "Error";
+
+    }
+}
